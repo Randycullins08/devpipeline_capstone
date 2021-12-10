@@ -26,47 +26,38 @@ cursor = connection.cursor()
 # new_database(cursor)
 
 class CompetencyTracking:
-    def __init__(self, cursor):
+    def __init__(self, cursor, email, password):
         self.cursor = cursor
-        self.email = None
+        self.email = email
         self.__password = None
+        self.hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        self.matched = bcrypt.checkpw(password, self.hashed)
         
 
-    # def register_user(self):
-    #     first_name = input("Enter First Name: ").title()
-    #     last_name = input("Enter Last Name: ").title()
-    #     phone = input("Enter Phone Number(555-555-5555): ")
-    #     email = input("Enter Email Address: ")
-    #     password = input("Enter Password: ")
-    #     hire_date = date.today()
-    #     date_created = date.today()
+    def register_user(self):
+        first_name = input("Enter First Name: ").title()
+        last_name = input("Enter Last Name: ").title()
+        phone = input("Enter Phone Number(555-555-5555): ")
+        email = input("Enter Email Address: ")
+        password = input("Enter Password: ")
+        hire_date = date.today()
+        date_created = date.today()
 
-    #     if not email:
-    #         return "Missing Email!"
-    #     if not password:
-    #         return "Missing Password!"
+        if not email:
+            return "Missing Email!"
+        if not password:
+            return "Missing Password!"
 
-    #     hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-    #     sql = """
-    #     INSERT INTO Users (first_name, last_name, phone, email, password, hire_date, date_created)
-    #     VALUES (?,?,?,?,?,?,?)
-    #     """
-    #     values = (first_name, last_name, phone, email, hashed, hire_date, date_created)
-    #     cursor.execute(sql, values)
-    #     connection.commit()
-    #     print(f"{first_name} was added!")
-
-    # def login(self):
-    #     email = input("Enter Email Address: ")
-    #     password = input("Enter Password: ")
-    #     check_sql = "SELECT * FROM Users WHERE email = ? AND password = ?"
-    #     rows = cursor.execute(check_sql, (password, email)).fetchone()
-    #     if rows != None:
-    #         print("User Not Found")
-    #     if bcrypt.checkpw(password, self.checkpw):
-    #         print("Welcome!")
-    #     else:
-    #         print("Wrong Password")           
+        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        sql = """
+        INSERT INTO Users (first_name, last_name, phone, email, password, hire_date, date_created)
+        VALUES (?,?,?,?,?,?,?)
+        """
+        values = (first_name, last_name, phone, email, hashed, hire_date, date_created)
+        cursor.execute(sql, values)
+        connection.commit()
+        print(f"{first_name} was added!")
+    
     
     def check_password(self, email, new_password, cursor):
         new_password = bcrypt.hashpw(new_password.encode('utf-8'), self.salt)
@@ -747,21 +738,31 @@ What Would You Like To Do?
             break
 
 # user_menu()
-def main_menu():
-    email = input("Enter Email Address: ")
-    password = input("Enter Password: ")
-    check_sql = "SELECT * FROM Users WHERE email = ? AND password = ?"
+def main_menu(email, password):
+    check_sql = "SELECT user_type FROM Users WHERE email = ? AND password = ?"
     values = (email, password)
     rows = cursor.execute(check_sql, values).fetchone()
-    if rows[9] == 1:
+    if rows[0] == 1:
         manager_menu()
     else:
         user_menu(email)
     
-main_menu()
+# # main_menu()
 
 # me = User("me", "test@test.com")
 # me.login()
 
 # me = CompetencyTracking(cursor)
 # print(me.salt)
+
+def login():
+    email = input("Enter Email Address: ")
+    password = input("Enter Password: ")
+    check_sql = cursor.execute("SELECT password FROM Users WHERE email = ?", (email,)).fetchone()
+    if check_sql[0] == 'password':
+        print("Please Change Your Password!!")
+    elif check_sql[0] == bcrypt.hashpw(password.encode('utf-8'), check_sql[0]):
+        print("Welcome")
+    main_menu(email, password)
+
+login()
