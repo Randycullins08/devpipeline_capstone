@@ -25,7 +25,7 @@ CREATE TABLE "Assessments" (
 	"assessment_id"	INTEGER UNIQUE,
 	"competency_id"	INTEGER,
 	"name"	TEXT NOT NULL,
-	"description"	,
+	"description" TEXT,
 	PRIMARY KEY("assessment_id" AUTOINCREMENT)
 );
 
@@ -37,8 +37,7 @@ CREATE TABLE "Competency_Assessment_Results" (
 	"score"	INTEGER NOT NULL,
 	"date_taken"	TEXT,
 	"active"	INTEGER DEFAULT 1,
-	FOREIGN KEY("assessment_id") REFERENCES "Assessments"("assessment_id"),
-	FOREIGN KEY("competency_id") REFERENCES "Competencies",
 	FOREIGN KEY("user_id") REFERENCES "Users"("user_id"),
+	FOREIGN KEY("assessment_id") REFERENCES "Assessments"("assessment_id"),
 	PRIMARY KEY("result_id" AUTOINCREMENT)
 );
