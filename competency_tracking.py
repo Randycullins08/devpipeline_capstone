@@ -30,6 +30,49 @@ class CompetencyTracking:
         self.cursor = cursor
         self.email = None
         self.__password = None
+        
+
+    # def register_user(self):
+    #     first_name = input("Enter First Name: ").title()
+    #     last_name = input("Enter Last Name: ").title()
+    #     phone = input("Enter Phone Number(555-555-5555): ")
+    #     email = input("Enter Email Address: ")
+    #     password = input("Enter Password: ")
+    #     hire_date = date.today()
+    #     date_created = date.today()
+
+    #     if not email:
+    #         return "Missing Email!"
+    #     if not password:
+    #         return "Missing Password!"
+
+    #     hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    #     sql = """
+    #     INSERT INTO Users (first_name, last_name, phone, email, password, hire_date, date_created)
+    #     VALUES (?,?,?,?,?,?,?)
+    #     """
+    #     values = (first_name, last_name, phone, email, hashed, hire_date, date_created)
+    #     cursor.execute(sql, values)
+    #     connection.commit()
+    #     print(f"{first_name} was added!")
+
+    # def login(self):
+    #     email = input("Enter Email Address: ")
+    #     password = input("Enter Password: ")
+    #     check_sql = "SELECT * FROM Users WHERE email = ? AND password = ?"
+    #     rows = cursor.execute(check_sql, (password, email)).fetchone()
+    #     if rows != None:
+    #         print("User Not Found")
+    #     if bcrypt.checkpw(password, self.checkpw):
+    #         print("Welcome!")
+    #     else:
+    #         print("Wrong Password")           
+    
+    def check_password(self, email, new_password, cursor):
+        new_password = bcrypt.hashpw(new_password.encode('utf-8'), self.salt)
+        select_sql = "SELECT email FROM Users WHERE password = ? AND WHERE email = ?"
+        row = cursor.execute(select_sql, (new_password, email)).fetchone()
+        return (row != None)
 
 class User(CompetencyTracking):
     def __init__(self, name, email):
@@ -125,8 +168,9 @@ What would you like to update?
             self.print_user(new_email)
         if update_input == '5':
             new_password = input("Enter New Password: ")
-            cursor.execute(update_password, (new_password, self.email))
+            cursor.execute(update_password, new_password)
             connection.commit()
+            self.print_user()
         if update_input == '6':
             print("Good Bye!")
             return
@@ -704,10 +748,6 @@ What Would You Like To Do?
 
 # user_menu()
 def main_menu():
-    print("""
-Welcome To Dev Pipeline
-Please Login    
-""")
     email = input("Enter Email Address: ")
     password = input("Enter Password: ")
     check_sql = "SELECT * FROM Users WHERE email = ? AND password = ?"
@@ -719,3 +759,9 @@ Please Login
         user_menu(email)
     
 main_menu()
+
+# me = User("me", "test@test.com")
+# me.login()
+
+# me = CompetencyTracking(cursor)
+# print(me.salt)
