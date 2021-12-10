@@ -23,31 +23,6 @@ class CompetencyTracking:
         self.__password = None
         self.hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         self.matched = bcrypt.checkpw(password, self.hashed)
-        
-
-    def register_user(self):
-        first_name = input("Enter First Name: ").title()
-        last_name = input("Enter Last Name: ").title()
-        phone = input("Enter Phone Number(555-555-5555): ")
-        email = input("Enter Email Address: ")
-        password = getpass("Enter Password: ")
-        hire_date = date.today()
-        date_created = date.today()
-
-        if not email:
-            return "Missing Email!"
-        if not password:
-            return "Missing Password!"
-
-        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        sql = """
-        INSERT INTO Users (first_name, last_name, phone, email, password, hire_date, date_created)
-        VALUES (?,?,?,?,?,?,?)
-        """
-        values = (first_name, last_name, phone, email, hashed, hire_date, date_created)
-        cursor.execute(sql, values)
-        connection.commit()
-        print(f"{first_name} was added!")
 
 class User(CompetencyTracking):
     def __init__(self, name, email):
@@ -608,12 +583,6 @@ Are You Sure You Want To Delete Assessment Results?
                 print(f"{i[0]:<9}{i[1]:<15}{i[2]:<7}{i[3]}")
             print()
 
-# manager = Manager(cursor)
-# manager.import_assessment_results_report()
-
-# user = User("me")
-# user.print_user()
-
 def manager_menu():
     while True:
         manager1 = Manager(cursor)
@@ -728,8 +697,6 @@ Are You Sure You Want To Import Assessment Results?
             print("Exiting Program")
             quit()
 
-# manager_menu()
-
 def user_menu(email):
     user1 = User(cursor, email)
     while True:
@@ -750,7 +717,6 @@ What Would You Like To Do?
             print("Exiting The Program")
             quit()
 
-# user_menu()
 def main_menu(email):
     check_sql = "SELECT user_type FROM Users WHERE email = ?"
     row = cursor.execute(check_sql, (email,)).fetchone()
@@ -758,14 +724,32 @@ def main_menu(email):
         manager_menu()
     else:
         user_menu(email)
-    
-# # main_menu()
 
-# me = User("me", "test@test.com")
-# me.login()
+def register_user():
+        first_name = input("Enter First Name: ").title()
+        last_name = input("Enter Last Name: ").title()
+        phone = input("Enter Phone Number(555-555-5555): ")
+        email = input("Enter Email Address: ")
+        password = getpass("Enter Password: ")
+        hire_date = date.today()
+        date_created = date.today()
 
-# me = CompetencyTracking(cursor)
-# print(me.salt)
+        if not email:
+            return "Missing Email!"
+        if not password:
+            return "Missing Password!"
+
+        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        sql = """
+        INSERT INTO Users (first_name, last_name, phone, email, password, hire_date, date_created)
+        VALUES (?,?,?,?,?,?,?)
+        """
+        values = (first_name, last_name, phone, email, hashed, hire_date, date_created)
+        cursor.execute(sql, values)
+        connection.commit()
+        print()
+        print(f"Welcome {first_name}!!!!!")
+        return user_menu(email)
 
 def login():
     email = input("Enter Email Address: ")
@@ -774,7 +758,19 @@ def login():
     if check_sql[0] == 'password':
         print("Please Change Your Password!!")
     elif check_sql[0] == bcrypt.hashpw(password.encode('utf-8'), check_sql[0]):
-        print("Welcome To Dev Pipeline!")
+        print("Welcome!")
     main_menu(email)
 
-login()
+def run_program():
+    print("Welcom To Dev Pipeline!")
+    account = input("""
+Login or Sign Up
+(1) - Login
+(2) - Sign Up
+""")
+    if account == '1':
+        login()
+    if account == '2':
+        register_user()
+
+run_program()
