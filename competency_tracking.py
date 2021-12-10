@@ -2,16 +2,7 @@ import sqlite3
 import csv
 from datetime import date
 import bcrypt
-# password = str(input("input password: ")) 
-# password = password.encode('utf-8')
-# hashed = bcrypt.hashpw(password, bcrypt.gensalt(10)) 
-# check = str(input("check password: ")) 
-# check = check.encode('utf-8') 
-# if bcrypt.checkpw(check, hashed):
-#  print("login success")
-# else:
-#  print("incorrect password")
-# print(hashed)
+from getpass import getpass
 
 connection = sqlite3.connect('competency.db')
 cursor = connection.cursor()
@@ -39,7 +30,7 @@ class CompetencyTracking:
         last_name = input("Enter Last Name: ").title()
         phone = input("Enter Phone Number(555-555-5555): ")
         email = input("Enter Email Address: ")
-        password = input("Enter Password: ")
+        password = getpass("Enter Password: ")
         hire_date = date.today()
         date_created = date.today()
 
@@ -57,13 +48,6 @@ class CompetencyTracking:
         cursor.execute(sql, values)
         connection.commit()
         print(f"{first_name} was added!")
-    
-    
-    def check_password(self, email, new_password, cursor):
-        new_password = bcrypt.hashpw(new_password.encode('utf-8'), self.salt)
-        select_sql = "SELECT email FROM Users WHERE password = ? AND WHERE email = ?"
-        row = cursor.execute(select_sql, (new_password, email)).fetchone()
-        return (row != None)
 
 class User(CompetencyTracking):
     def __init__(self, name, email):
@@ -158,13 +142,14 @@ What would you like to update?
             connection.commit()
             self.print_user(new_email)
         if update_input == '5':
-            new_password = input("Enter New Password: ")
-            cursor.execute(update_password, new_password)
+            new_password = getpass("Enter New Password: ")
+            hashed = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+            cursor.execute(update_password, hashed)
             connection.commit()
             self.print_user()
         if update_input == '6':
             print("Good Bye!")
-            return
+            return user_menu(self.email)
 
 class Manager(CompetencyTracking):
     def __init__(self,name):
@@ -205,7 +190,7 @@ class Manager(CompetencyTracking):
         last_name = input("Enter Last Name: ").title()
         phone = input("Enter Phone Number: ")
         email = input("Enter Email Address: ")
-        password = input("Enter Temporary Password(to be changed by the user later): ")
+        password = "password"
         hire_date = input("Enter Hire Date: ")
         date_created = date.today()
         print(f"{first_name} {last_name} was added")
@@ -287,12 +272,16 @@ What would you like to update?
 (2) - Last name
 (3) - Phone
 (4) - Email Address
-(5) - Back To Menu
+(5) - Change Password
+(6) - Make User Manager
+(7) - Back To Menu
 """)
         update_email = "UPDATE Users SET email = ? WHERE user_id = ?"
         update_first_name = "UPDATE Users SET first_name = ? WHERE user_id = ?"
         update_last_name = "UPDATE Users SET last_name = ? WHERE user_id = ?"
         update_phone = "UPDATE Users SET Phone = ? WHERE user_id = ?"
+        update_user_type = "UPDATE Users SET user_type = ? WHERE user_id = ?"
+        update_password = "UPDATE Users SET password = ? WHERE user_id = ?"
         if update_input == '1':
             user_id_input = input("Enter User Id: ")
             name = input("Enter New First Name: ").title()
@@ -322,8 +311,32 @@ What would you like to update?
             self.view_user_info()
             print("User has been updated")
         if update_input == '5':
+            user_id_input = input("Enter User Id: ")
+            email = input("Enter Users Email Address: ")
+            check_password = getpass("Enter Old Password: ")
+            check_sql = cursor.execute("SELECT password FROM Users WHERE email = ?", (email,)).fetchone()
+            if check_password == 'password':
+                new_password = getpass("Enter New Password: ")
+                hashed = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+                cursor.execute(update_password, (hashed, user_id_input))
+                connection.commit()
+                print()
+                print("Password Was Changed")
+            elif check_sql[0] == bcrypt.hashpw(check_password.encode('utf-8'), check_sql[0]):
+                new_password = getpass(input("Enter New Password: "))
+                cursor.execute(update_password, (new_password, user_id_input))
+                connection.commit()
+                print()
+                print("Password Was Changed")
+        if update_input == '6':
+            user_id_input = input("Enter User Id: ")
+            user_type = input("Enter (1) To Change User To Manager: ")
+            cursor.execute(update_user_type, (user_type, user_id_input))
+            connection.commit()
+            self.view_user_info()
+        if update_input == '7':
             print("Going Back")
-            return
+            return manager_menu()
 
     def edit_competency(self):
         self.view_competencies()
@@ -357,7 +370,7 @@ What would you like to update?
             self.view_competencies()
         if update_input == '4':
             print("Going Back")
-            return 
+            return manager_menu()
 
     def edit_assessment(self):
         self.view_assessments()
@@ -383,7 +396,7 @@ What would you like to update?
             self.view_assessments()
         if update_input == '3':
             print("Going Back")
-            return
+            return manager_menu()
     
     def user_assessments(self):
         print("\nWhich User Would You Like To View?")
@@ -443,7 +456,7 @@ Are You Sure You Want To Update Assessment Results?
             self.view_assessment_results()
         if menu_input == '2':
             print("Going Back")
-            return
+            return manager_menu()
 
     def delete_assessment_results(self):
         menu_input = input("""
@@ -460,7 +473,7 @@ Are You Sure You Want To Delete Assessment Results?
             self.view_assessment_results()
         if menu_input == '2':
             print("Going Back")
-            return
+            return manager_menu()
 
     def user_competency_report(self):
         self.view_competencies()
@@ -712,8 +725,8 @@ Are You Sure You Want To Import Assessment Results?
                         print("Going Back")
                         break
         if menu == '11':
-            print("Going Back To Main Menu")
-            break
+            print("Exiting Program")
+            quit()
 
 # manager_menu()
 
@@ -734,15 +747,14 @@ What Would You Like To Do?
         if menu == '3':
             user1.user_competencies()
         if menu == '4':
-            print("Going Back")
-            break
+            print("Exiting The Program")
+            quit()
 
 # user_menu()
-def main_menu(email, password):
-    check_sql = "SELECT user_type FROM Users WHERE email = ? AND password = ?"
-    values = (email, password)
-    rows = cursor.execute(check_sql, values).fetchone()
-    if rows[0] == 1:
+def main_menu(email):
+    check_sql = "SELECT user_type FROM Users WHERE email = ?"
+    row = cursor.execute(check_sql, (email,)).fetchone()
+    if row[0] == 1:
         manager_menu()
     else:
         user_menu(email)
@@ -757,12 +769,12 @@ def main_menu(email, password):
 
 def login():
     email = input("Enter Email Address: ")
-    password = input("Enter Password: ")
+    password = getpass("Enter Password: ")
     check_sql = cursor.execute("SELECT password FROM Users WHERE email = ?", (email,)).fetchone()
     if check_sql[0] == 'password':
         print("Please Change Your Password!!")
     elif check_sql[0] == bcrypt.hashpw(password.encode('utf-8'), check_sql[0]):
-        print("Welcome")
-    main_menu(email, password)
+        print("Welcome To Dev Pipeline!")
+    main_menu(email)
 
 login()
