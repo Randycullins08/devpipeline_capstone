@@ -302,7 +302,8 @@ What would you like to update?
                 print("Password Was Changed")
             elif check_sql[0] == bcrypt.hashpw(check_password.encode('utf-8'), check_sql[0]):
                 new_password = getpass("Enter New Password: ")
-                cursor.execute(update_password, (new_password, user_id_input))
+                hashed = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+                cursor.execute(update_password, (hashed, user_id_input))
                 connection.commit()
                 print()
                 print("Password Was Changed")
