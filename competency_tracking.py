@@ -117,11 +117,14 @@ What would you like to update?
             connection.commit()
             self.print_user(new_email)
         if update_input == '5':
-            new_password = getpass("Enter New Password: ")
-            hashed = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
-            cursor.execute(update_password, hashed)
-            connection.commit()
-            self.print_user()
+            check_sql = cursor.execute("SELECT password FROM Users WHERE email = ?", (self.email,)).fetchone()
+            check_password = getpass("Enter Old Password: ")
+            if check_sql[0] == bcrypt.hashpw(check_password.encode('utf-8'), check_sql[0]):
+                new_password = getpass("Enter New Password: ")
+                hashed = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+                cursor.execute(update_password, (hashed, self.email))
+                connection.commit()
+                self.print_user()
         if update_input == '6':
             print("Good Bye!")
             return user_menu(self.email)
@@ -298,7 +301,7 @@ What would you like to update?
                 print()
                 print("Password Was Changed")
             elif check_sql[0] == bcrypt.hashpw(check_password.encode('utf-8'), check_sql[0]):
-                new_password = getpass(input("Enter New Password: "))
+                new_password = getpass("Enter New Password: ")
                 cursor.execute(update_password, (new_password, user_id_input))
                 connection.commit()
                 print()
